@@ -1,0 +1,6 @@
+domain: wasmcloud-k8s-operator
+layout:
+- go.kubebuilder.io/v3
+projectName: wasmcloud-k8s-operator
+repo: wasmcloud-k8s-operator/app
+version: "3"
