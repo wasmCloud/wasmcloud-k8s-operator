@@ -18,9 +18,13 @@ impl Handler for MyHandler {
     fn sync(&self, request: &SyncRequest) -> Result<SyncResponse, Error> {
         // TODO: place a message to topic
 
-        dbg!(request);
+        // dbg!(request);
+
         Ok(SyncResponse {
-            status: json!("running"),
+            status: json!({
+                "message": "magical",
+                "phase": "Running",
+            }),
             children: Vec::new(),
             resync: None,
         })
@@ -28,6 +32,7 @@ impl Handler for MyHandler {
 }
 
 fn main() {
+    env_logger::init();
     let operator_config = OperatorConfig::new(OPERATOR_NAME, RESOURCE_TYPE);
 
     let client_config = ClientConfig::from_kubeconfig(OPERATOR_NAME.to_string())
