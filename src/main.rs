@@ -8,7 +8,7 @@ use roperator::{
 const OPERATOR_NAME: &str = "wasmcloud-k8s-operator";
 
 static RESOURCE_TYPE: &K8sType = &K8sType {
-    api_version: "wasmcloud.com/v1alpha1",
+    api_version: "wasmcloud.com/v1beta1",
     kind: "WasmCloudApplication",
     plural_kind: "wasmcloudapplications",
 };

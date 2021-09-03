@@ -1,4 +1,4 @@
-apiVersion: wasmcloud.com/v1alpha1
+apiVersion: wasmcloud.com/v1beta1
 kind: WasmCloudApplication
 metadata:
   name: my-example-app
