@@ -1,28 +1,9 @@
+# This is a copy of core.oam.dev/v1beta1 Application from kubevela
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  annotations:
-    cert-manager.io/inject-ca-from: vela-system/kubevela-vela-core-root-cert
-    controller-gen.kubebuilder.io/version: v0.2.4
-  creationTimestamp: "2021-09-02T09:28:53Z"
-  generation: 2
-  name: applications.core.oam.dev
-  resourceVersion: "1273"
-  uid: 52b27d8f-72e6-4774-9fcd-e7fdcc46cfaa
+  name: wasmcloudapplications.wasmcloud.com
 spec:
-  conversion:
-    strategy: Webhook
-    webhook:
-      clientConfig:
-        caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJkakNDQVJ5Z0F3SUJBZ0lSQUlqSWZ2ZmZNK3pIVXFGeGxmdmhDSnd3Q2dZSUtvWkl6ajBFQXdJd0R6RU4KTUFzR0ExVUVDaE1FYm1sc01UQWdGdzB5TVRBNU1ESXdPVEkwTVRGYUdBOHlNVEl4TURnd09UQTVNalF4TVZvdwpEekVOTUFzR0ExVUVDaE1FYm1sc01UQlpNQk1HQnlxR1NNNDlBZ0VHQ0NxR1NNNDlBd0VIQTBJQUJBYU1wTFlPCkZBTFpacFNQR0M5V0RLbEhYWGpuMWY2Q2tiblE2MjZ3dUswRTZnR2RXRVhsbWN4VXdkYXZubUVkT3VDK2daVFcKLzhrWjU3QTF2Z1JjMW9DalZ6QlZNQTRHQTFVZER3RUIvd1FFQXdJQ0JEQVRCZ05WSFNVRUREQUtCZ2dyQmdFRgpCUWNEQVRBUEJnTlZIUk1CQWY4RUJUQURBUUgvTUIwR0ExVWREZ1FXQkJRMUJXSjRyVW5zVS9pd1FFbWJCSFhqClVlaDZ5REFLQmdncWhrak9QUVFEQWdOSUFEQkZBaUJJZEIxaW5aa3hnVGZkRW96eTcvdTUvL2J0QXZaOXV3bGsKZ2FvN00zSUlUd0loQU5WcDBxK1QwL3FReVYzdVdOSmladUhoWE8zMWlyRDlod0lFNzQvY3o4MWsKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
-        service:
-          name: vela-core-webhook
-          namespace: vela-system
-          path: /convert
-          port: 443
-      conversionReviewVersions:
-        - v1beta1
-        - v1alpha2
   group: wasmcloud.com
   names:
     categories:
