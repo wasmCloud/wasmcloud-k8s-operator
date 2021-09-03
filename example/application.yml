@@ -1,4 +1,4 @@
-apiVersion: core.oam.dev/v1beta1
+apiVersion: wasmcloud.com/v1alpha1
 kind: WasmCloudApplication
 metadata:
   name: my-example-app
