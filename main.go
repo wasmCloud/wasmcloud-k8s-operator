@@ -54,6 +54,31 @@ func init() {
 	//+kubebuilder:scaffold:scheme
 }
 
+type message struct {
+	Name        string                            `json:"name"`
+	Namespace   string                            `json:"namespace"`
+	Application *corev1beta1.WasmCloudApplication `json:"application"`
+}
+
+func Send(m message) {
+	data, err := json.Marshal(m)
+	if err != nil {
+		setupLog.Error(err, "error parsing the template")
+		os.Exit(1)
+	}
+	nc, _ := nats.Connect(nats.DefaultURL)
+	// TODO: replace default with lattice namespace prefix
+	msg, err := nc.Request("wasmbus.alc.default", []byte(data), 1*time.Second)
+
+	if err != nil {
+		setupLog.Error(err, "unable to connect to the lattice controller")
+		os.Exit(1)
+	}
+
+	// TODO: propagate the response back to k8s
+	println(string(msg.Data))
+}
+
 type reconciler struct {
 	client.Client
 	scheme *runtime.Scheme
@@ -63,28 +88,22 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	log := log.FromContext(ctx).WithValues("wasmcloud-lattice-controller", req.NamespacedName)
 	log.V(1).Info("reconciling with wasmcloud-lattice-controller")
 
-	var wasmcloudpod corev1beta1.WasmCloudApplication
-	if err := r.Get(ctx, req.NamespacedName, &wasmcloudpod); err != nil {
-		// this is when the requested app has been deleted
+	var app corev1beta1.WasmCloudApplication
+	if err := r.Get(ctx, req.NamespacedName, &app); err != nil {
+		Send(message{
+			Name:        req.Name,
+			Namespace:   req.Namespace,
+			Application: nil,
+		})
+
 		return ctrl.Result{}, nil
 	}
 
-	pod := wasmcloudpod.DeepCopy()
-	data, err := json.Marshal(pod)
-	if err != nil {
-		setupLog.Error(err, "error parsing the template")
-		os.Exit(1)
-	}
-
-	nc, _ := nats.Connect(nats.DefaultURL)
-	msg, err := nc.Request("wasmbus.alc.default", []byte(data), 10*time.Millisecond)
-
-	if err != nil {
-		setupLog.Error(err, "unable to connect to the lattice controller")
-		os.Exit(1)
-	}
-
-	println(string(msg.Data))
+	Send(message{
+		Name:        req.Name,
+		Namespace:   req.Namespace,
+		Application: app.DeepCopy(),
+	})
 
 	return ctrl.Result{}, nil
 }
