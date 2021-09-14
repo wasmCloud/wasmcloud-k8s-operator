@@ -45,6 +45,13 @@ spec:
           status:
             description: WasmCloudApplicationStatus defines the observed state of
               WasmCloudApplication
+            properties:
+              fromLatticeController:
+                description: Status from wasmCloud lattice controller when requesting
+                  the change or updating
+                type: string
+            required:
+            - fromLatticeController
             type: object
         type: object
     served: true

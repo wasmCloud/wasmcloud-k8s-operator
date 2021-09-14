@@ -59,8 +59,11 @@ type message struct {
 	Namespace   string                            `json:"namespace"`
 	Application *corev1beta1.WasmCloudApplication `json:"application"`
 }
+type response struct {
+	Status string `json:"status"`
+}
 
-func Send(m message) {
+func Send(m message) response {
 	data, err := json.Marshal(m)
 	if err != nil {
 		setupLog.Error(err, "error parsing the template")
@@ -75,8 +78,14 @@ func Send(m message) {
 		os.Exit(1)
 	}
 
-	// TODO: propagate the response back to k8s
-	println(string(msg.Data))
+	var response response
+	err = json.Unmarshal(msg.Data, &response)
+	if err != nil {
+		setupLog.Error(err, "invalid json from lattice controller")
+		os.Exit(1)
+	}
+
+	return response
 }
 
 type reconciler struct {
@@ -99,11 +108,20 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 
-	Send(message{
+	response := Send(message{
 		Name:        req.Name,
 		Namespace:   req.Namespace,
 		Application: app.DeepCopy(),
 	})
+
+	app.Status.FromLatticeController = response.Status
+
+	log.V(1).Info(app.Status.FromLatticeController)
+
+	err := r.Status().Update(context.Background(), &app)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }

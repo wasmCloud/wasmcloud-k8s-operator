@@ -36,6 +36,9 @@ type WasmCloudApplicationSpec struct {
 type WasmCloudApplicationStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// Status from wasmCloud lattice controller when requesting the change or updating
+	FromLatticeController string `json:"fromLatticeController"`
 }
 
 //+kubebuilder:object:root=true
