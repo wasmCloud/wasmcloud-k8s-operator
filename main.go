@@ -17,20 +17,27 @@ limitations under the License.
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"flag"
 	"os"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/nats-io/nats.go"
 	corev1beta1 "github.com/wasmCloud/wasmcloud-k8s-operator/api/v1beta1"
 	//+kubebuilder:scaffold:imports
 )
@@ -45,6 +52,41 @@ func init() {
 
 	utilruntime.Must(corev1beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
+}
+
+type reconciler struct {
+	client.Client
+	scheme *runtime.Scheme
+}
+
+func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	log := log.FromContext(ctx).WithValues("wasmcloud-lattice-controller", req.NamespacedName)
+	log.V(1).Info("reconciling with wasmcloud-lattice-controller")
+
+	var wasmcloudpod corev1beta1.WasmCloudApplication
+	if err := r.Get(ctx, req.NamespacedName, &wasmcloudpod); err != nil {
+		// this is when the requested app has been deleted
+		return ctrl.Result{}, nil
+	}
+
+	pod := wasmcloudpod.DeepCopy()
+	data, err := json.Marshal(pod)
+	if err != nil {
+		setupLog.Error(err, "error parsing the template")
+		os.Exit(1)
+	}
+
+	nc, _ := nats.Connect(nats.DefaultURL)
+	msg, err := nc.Request("wasmbus.alc.default", []byte(data), 10*time.Millisecond)
+
+	if err != nil {
+		setupLog.Error(err, "unable to connect to the lattice controller")
+		os.Exit(1)
+	}
+
+	println(string(msg.Data))
+
+	return ctrl.Result{}, nil
 }
 
 func main() {
@@ -76,6 +118,14 @@ func main() {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
+
+	ctrl.NewControllerManagedBy(mgr).
+		For(&corev1beta1.WasmCloudApplication{}).
+		Owns(&corev1beta1.WasmCloudApplication{}).
+		Complete(&reconciler{
+			Client: mgr.GetClient(),
+			scheme: mgr.GetScheme(),
+		})
 
 	//+kubebuilder:scaffold:builder
 
