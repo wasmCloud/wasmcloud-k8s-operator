@@ -18,19 +18,9 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	oamv1beta1 "github.com/oam-dev/kubevela/apis/core.oam.dev/v1beta1"
 )
-
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// WasmCloudApplicationSpec defines the desired state of WasmCloudApplication
-type WasmCloudApplicationSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of WasmCloudApplication. Edit wasmcloudapplication_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
-}
 
 // WasmCloudApplicationStatus defines the observed state of WasmCloudApplication
 type WasmCloudApplicationStatus struct {
@@ -49,7 +39,7 @@ type WasmCloudApplication struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   WasmCloudApplicationSpec   `json:"spec,omitempty"`
+	Spec   oamv1beta1.ApplicationSpec `json:"spec,omitempty"`
 	Status WasmCloudApplicationStatus `json:"status,omitempty"`
 }
 
