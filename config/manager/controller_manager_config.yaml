@@ -8,4 +8,4 @@ webhook:
   port: 9443
 leaderElection:
   leaderElect: true
-  resourceName: e35ccaea.wasmcloud-k8s-operator
+  resourceName: 854763a3.wasmcloud.com

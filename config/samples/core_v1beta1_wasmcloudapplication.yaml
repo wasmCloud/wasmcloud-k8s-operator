@@ -1,0 +1,7 @@
+apiVersion: core.wasmcloud.com/v1beta1
+kind: WasmCloudApplication
+metadata:
+  name: wasmcloudapplication-sample
+spec:
+  # Add fields here
+  foo: bar
