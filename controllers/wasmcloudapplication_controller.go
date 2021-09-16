@@ -41,38 +41,38 @@ type WasmCloudApplicationReconciler struct {
 func (r *WasmCloudApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("NamespacedName", req.NamespacedName)
 
-	var app *corev1beta1.WasmCloudApplication
+	var app corev1beta1.WasmCloudApplication
 	log.Info("reconciling the requested manifest", "request", req)
 
-	if err := r.Get(ctx, req.NamespacedName, app); err != nil {
-		log.Error(err, "unable to fetch app")
+	if err := r.Get(ctx, req.NamespacedName, &app); err != nil {
+		log.Error(err, "unable to fetch app. Ignoring.")
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
 		// on deleted requests.
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		return ctrl.Result{}, nil
 	}
 
 	appFinalizerName := "core.wasmcloud.com/finalizer"
 
 	if app.ObjectMeta.DeletionTimestamp.IsZero() {
 		if !containsString(app.GetFinalizers(), appFinalizerName) {
-			controllerutil.AddFinalizer(app, appFinalizerName)
+			controllerutil.AddFinalizer(&app, appFinalizerName)
 
-			if err := r.Update(ctx, app); err != nil {
+			if err := r.Update(ctx, &app); err != nil {
 				return ctrl.Result{}, err
 			}
 		}
 	} else {
 		if containsString(app.GetFinalizers(), appFinalizerName) {
-			if err := r.deleteExternalResources(app); err != nil {
+			if err := r.deleteExternalResources(&app); err != nil {
 				// if fail to delete the external dependency here, return with error
 				// so that it can be retried
 				return ctrl.Result{}, err
 			}
 
 			// remove our finalizer from the list and update it.
-			controllerutil.RemoveFinalizer(app, appFinalizerName)
-			if err := r.Update(ctx, app); err != nil {
+			controllerutil.RemoveFinalizer(&app, appFinalizerName)
+			if err := r.Update(ctx, &app); err != nil {
 				return ctrl.Result{}, err
 			}
 		}
@@ -94,7 +94,7 @@ func (r *WasmCloudApplicationReconciler) Reconcile(ctx context.Context, req ctrl
 
 	log.Info("response from the lattice controller", "application", response.Status)
 
-	if err := r.Status().Update(context.Background(), app); err != nil {
+	if err := r.Status().Update(context.Background(), &app); err != nil {
 		log.Info("error updating the status", "error", err)
 		return ctrl.Result{}, err
 	}
