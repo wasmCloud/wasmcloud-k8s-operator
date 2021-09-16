@@ -81,13 +81,8 @@ func (r *WasmCloudApplicationReconciler) Reconcile(ctx context.Context, req ctrl
 		}
 	}
 
-	response, err := (&request.Sender{
-		Log: log,
-	}).Send(request.Message{
-		Name:        req.Name,
-		Namespace:   req.Namespace,
-		Application: app.DeepCopy(),
-	})
+	sender := request.Sender{Log: log}
+	response, err := sender.Put(&app)
 
 	if err != nil {
 		return ctrl.Result{}, err
@@ -114,14 +109,9 @@ func (r *WasmCloudApplicationReconciler) SetupWithManager(mgr ctrl.Manager) erro
 }
 
 func (r *WasmCloudApplicationReconciler) deleteExternalResources(app *corev1beta1.WasmCloudApplication) error {
-	_, err := (&request.Sender{
-		Log: r.Log,
-	}).Send(request.Message{
-		// FIXME: make this Delete() and make send be Put()
-		Name:        app.Name,
-		Namespace:   app.Namespace,
-		Application: nil,
-	})
+	sender := request.Sender{Log: r.Log}
+	_, err := sender.Delete(app)
+
 	return err
 }
 
