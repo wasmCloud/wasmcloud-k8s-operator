@@ -1,16 +1,15 @@
-domain: wasmcloud-k8s-operator
+domain: wasmcloud.com
 layout:
 - go.kubebuilder.io/v3
 projectName: wasmcloud-k8s-operator
-repo: wasmcloud-k8s-operator/app
+repo: github.com/wasmCloud/wasmcloud-k8s-operator
 resources:
 - api:
     crdVersion: v1
     namespaced: true
-  controller: true
-  domain: wasmcloud-k8s-operator
-  group: wasmcloud.com
-  kind: App
-  path: wasmcloud-k8s-operator/app/api/v1alpha1
-  version: v1alpha1
+  domain: wasmcloud.com
+  group: core
+  kind: WasmCloudApplication
+  path: github.com/wasmCloud/wasmcloud-k8s-operator/api/v1beta1
+  version: v1beta1
 version: "3"

@@ -1,6 +1,0 @@
-apiVersion: wasmcloud.com.wasmcloud-k8s-operator/v1alpha1
-kind: App
-metadata:
-  name: app-sample
-spec:
-  # Add fields here
