@@ -27,7 +27,7 @@ import (
 
 	"github.com/go-logr/logr"
 	corev1beta1 "github.com/wasmCloud/wasmcloud-k8s-operator/api/v1beta1"
-	"github.com/wasmCloud/wasmcloud-k8s-operator/request"
+	latticeclient "github.com/wasmCloud/wasmcloud-k8s-operator/lattice_client"
 )
 
 // WasmCloudApplicationReconciler reconciles a WasmCloudApplication object
@@ -45,7 +45,7 @@ func (r *WasmCloudApplicationReconciler) Reconcile(ctx context.Context, req ctrl
 	log.Info("reconciling the requested manifest", "request", req)
 
 	if err := r.Get(ctx, req.NamespacedName, &app); err != nil {
-		log.Error(err, "unable to fetch app. Ignoring.")
+		log.Info("unable to fetch app. App is possibly deleted or does not exist yet.", "error", err)
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
 		// on deleted requests.
@@ -81,16 +81,11 @@ func (r *WasmCloudApplicationReconciler) Reconcile(ctx context.Context, req ctrl
 		}
 	}
 
-	sender := request.Sender{Log: log}
-	response, err := sender.Put(&app)
-
-	if err != nil {
+	if err := r.createExternalResources(&app); err != nil {
+		// if fail to delete the external dependency here, return with error
+		// so that it can be retried
 		return ctrl.Result{}, err
 	}
-
-	app.Status.FromLatticeController = response.Status
-
-	log.Info("response from the lattice controller", "application", response.Status)
 
 	if err := r.Status().Update(context.Background(), &app); err != nil {
 		log.Info("error updating the status", "error", err)
@@ -108,8 +103,17 @@ func (r *WasmCloudApplicationReconciler) SetupWithManager(mgr ctrl.Manager) erro
 		Complete(r)
 }
 
+func (r *WasmCloudApplicationReconciler) createExternalResources(app *corev1beta1.WasmCloudApplication) error {
+	sender := latticeclient.Client{Log: r.Log}
+	response, err := sender.Put(app)
+
+	app.Status.FromLatticeController = response.Status
+
+	return err
+}
+
 func (r *WasmCloudApplicationReconciler) deleteExternalResources(app *corev1beta1.WasmCloudApplication) error {
-	sender := request.Sender{Log: r.Log}
+	sender := latticeclient.Client{Log: r.Log}
 	_, err := sender.Delete(app)
 
 	return err
@@ -125,12 +129,12 @@ func containsString(slice []string, s string) bool {
 	return false
 }
 
-func removeString(slice []string, s string) (result []string) {
-	for _, item := range slice {
-		if item == s {
-			continue
-		}
-		result = append(result, item)
-	}
-	return
-}
+// func removeString(slice []string, s string) (result []string) {
+// 	for _, item := range slice {
+// 		if item == s {
+// 			continue
+// 		}
+// 		result = append(result, item)
+// 	}
+// 	return
+// }

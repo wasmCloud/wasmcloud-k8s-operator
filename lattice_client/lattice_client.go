@@ -1,4 +1,4 @@
-package request
+package latticeclient
 
 import (
 	"encoding/json"
@@ -20,21 +20,21 @@ type response struct {
 	Status string `json:"status"`
 }
 
-type Sender struct {
+type Client struct {
 	Log logr.Logger
 }
 
-func (s *Sender) Put(app *corev1beta1.WasmCloudApplication) (response, error) {
-	r, e := s.send("put", app)
+func (c *Client) Put(app *corev1beta1.WasmCloudApplication) (response, error) {
+	r, e := c.send("put", app)
 	return r, e
 }
-func (s *Sender) Delete(app *corev1beta1.WasmCloudApplication) (response, error) {
-	r, e := s.send("delete", app)
+func (c *Client) Delete(app *corev1beta1.WasmCloudApplication) (response, error) {
+	r, e := c.send("delete", app)
 	return r, e
 }
 
-func (s *Sender) send(verb string, app *corev1beta1.WasmCloudApplication) (response, error) {
-	log := s.Log.WithValues("requesting wasmcloud-lattice-controller to reconcile", app)
+func (c *Client) send(verb string, app *corev1beta1.WasmCloudApplication) (response, error) {
+	log := c.Log.WithValues("requesting wasmcloud-lattice-controller to reconcile", app)
 
 	data, err := json.Marshal(app)
 	if err != nil {
@@ -57,6 +57,8 @@ func (s *Sender) send(verb string, app *corev1beta1.WasmCloudApplication) (respo
 		log.Info("invalid json from lattice controller", "error", err)
 		return response, err
 	}
+
+	log.Info("response from the lattice controller", "application", response.Status)
 
 	return response, nil
 }
