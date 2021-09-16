@@ -39,7 +39,7 @@ type WasmCloudApplicationReconciler struct {
 }
 
 func (r *WasmCloudApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := r.Log.WithValues("wasmcloud-lattice-controller", req.NamespacedName)
+	log := r.Log.WithValues("NamespacedName", req.NamespacedName)
 
 	var app *corev1beta1.WasmCloudApplication
 	log.Info("reconciling the requested manifest", "request", req)
