@@ -75,6 +75,9 @@ func (r *WasmCloudApplicationReconciler) Reconcile(ctx context.Context, req ctrl
 			if err := r.Update(ctx, &app); err != nil {
 				return ctrl.Result{}, err
 			}
+
+			// Stop reconciliation as the item is being deleted
+			return ctrl.Result{}, nil
 		}
 	}
 
