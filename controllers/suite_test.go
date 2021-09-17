@@ -31,7 +31,10 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/nats-io/gnatsd/server"
+
 	corev1beta1 "github.com/wasmCloud/wasmcloud-k8s-operator/api/v1beta1"
+	fakelatticecontroller "github.com/wasmCloud/wasmcloud-k8s-operator/fake_lattice_controller"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -41,6 +44,7 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var natsServer *server.Server
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -91,6 +95,8 @@ var _ = BeforeSuite(func() {
 		Expect(err).ToNot(HaveOccurred())
 	}()
 
+	natsServer = fakelatticecontroller.Setup()
+
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 
@@ -99,5 +105,6 @@ var _ = BeforeSuite(func() {
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
 	err := testEnv.Stop()
+	natsServer.Shutdown()
 	Expect(err).NotTo(HaveOccurred())
 })

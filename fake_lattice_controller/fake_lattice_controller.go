@@ -1,17 +1,23 @@
 package fakelatticecontroller
 
 import (
+	"github.com/nats-io/gnatsd/server"
 	natsserver "github.com/nats-io/nats-server/test"
 	"github.com/nats-io/nats.go"
 )
 
-func Setup() *nats.Conn {
+func Setup() *server.Server {
 	server := natsserver.RunDefaultServer()
 	server.Start()
 
+	return server
+
+}
+
+func SetupSubscriber() *nats.Conn {
 	connection, err := nats.Connect(nats.DefaultURL)
 	if err != nil {
-		panic(err)
+		panic("Unable to connect to NATS server")
 	}
 
 	connection.Subscribe("wasmbus.alc.default.*", func(req *nats.Msg) {

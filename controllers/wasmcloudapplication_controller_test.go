@@ -85,11 +85,9 @@ var _ = Describe("Test Create Application", func() {
 			Status: corev1beta1.WasmCloudApplicationStatus{},
 		}
 	})
-	AfterEach(func() {})
 	Context("Do", func() {
 		It("Should create the application", func() {
-			connection := fakelatticecontroller.Setup()
-			defer connection.Close()
+			connection := fakelatticecontroller.SetupSubscriber()
 
 			ctx := context.Background()
 			Expect(k8sClient.Create(ctx, application)).Should(Succeed())
@@ -104,6 +102,7 @@ var _ = Describe("Test Create Application", func() {
 			}, timeout, interval).Should(BeTrue())
 			Expect(len(app.Spec.Components)).Should(Equal(1))
 			Expect(app.Status.FromLatticeController).Should(Equal("received"))
+			connection.Close()
 		})
 	})
 })
