@@ -29,7 +29,7 @@ func (c *Client) Put(app *corev1beta1.WasmCloudApplication) (response, error) {
 	return r, e
 }
 func (c *Client) Delete(app *corev1beta1.WasmCloudApplication) (response, error) {
-	r, e := c.send("delete", app)
+	r, e := c.send("del", app)
 	return r, e
 }
 
