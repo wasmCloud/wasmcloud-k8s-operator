@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"os/exec"
 	"time"
 
 	"github.com/oam-dev/kubevela/apis/core.oam.dev/common"
@@ -16,9 +15,9 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-)
 
-var natsCmd *exec.Cmd
+	fakelatticecontroller "github.com/wasmCloud/wasmcloud-k8s-operator/fake_lattice_controller"
+)
 
 var _ = Describe("Test Create Application", func() {
 	const (
@@ -30,10 +29,6 @@ var _ = Describe("Test Create Application", func() {
 		application *corev1beta1.WasmCloudApplication
 	)
 	BeforeEach(func() {
-		// TODO: replace with something that we have more control/visibility over?
-		natsCmd = exec.Command("nats", "reply", "wasmbus.alc.default.*", "{\"status\":\"received\"}")
-		time.Sleep(1 * time.Second)
-
 		application = &corev1beta1.WasmCloudApplication{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "App",
@@ -90,11 +85,12 @@ var _ = Describe("Test Create Application", func() {
 			Status: corev1beta1.WasmCloudApplicationStatus{},
 		}
 	})
-	AfterEach(func() {
-		natsCmd.Process.Kill()
-	})
+	AfterEach(func() {})
 	Context("Do", func() {
 		It("Should create the application", func() {
+			connection := fakelatticecontroller.Setup()
+			defer connection.Close()
+
 			ctx := context.Background()
 			Expect(k8sClient.Create(ctx, application)).Should(Succeed())
 			app := corev1beta1.WasmCloudApplication{}
