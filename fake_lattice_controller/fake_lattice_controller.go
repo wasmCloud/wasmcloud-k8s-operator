@@ -1,8 +1,8 @@
 package fakelatticecontroller
 
 import (
-	"github.com/nats-io/gnatsd/server"
-	natsserver "github.com/nats-io/nats-server/test"
+	"github.com/nats-io/nats-server/v2/server"
+	natsserver "github.com/nats-io/nats-server/v2/test"
 	"github.com/nats-io/nats.go"
 )
 
