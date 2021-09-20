@@ -98,8 +98,10 @@ var _ = Describe("Test Create Application", func() {
 					Name:      "latticecontroller",
 				}, &app)
 
-				return err == nil
+				// It takes a few updates before the status is propagated from lattice controller.
+				return err == nil && app.Status.FromLatticeController == "received"
 			}, timeout, interval).Should(BeTrue())
+
 			Expect(len(app.Spec.Components)).Should(Equal(1))
 			Expect(app.Status.FromLatticeController).Should(Equal("received"))
 			connection.Close()
