@@ -87,7 +87,7 @@ var _ = Describe("Test Create Application", func() {
 	})
 	Context("Do", func() {
 		It("Should create the application", func() {
-			connection := fakelatticecontroller.SetupSubscriber()
+			fakecontroller := fakelatticecontroller.SetupSubscriber()
 
 			ctx := context.Background()
 			Expect(k8sClient.Create(ctx, application)).Should(Succeed())
@@ -104,7 +104,12 @@ var _ = Describe("Test Create Application", func() {
 
 			Expect(len(app.Spec.Components)).Should(Equal(1))
 			Expect(app.Status.FromLatticeController).Should(Equal("received"))
-			connection.Close()
+			fakecontroller.Close()
+
+			// Check that we actually the lattice controller about our app.
+			msg := fakecontroller.SpyNextMessage()
+			Expect(msg).ShouldNot(BeNil())
+			Expect(msg.Subject).Should(Equal("wasmbus.alc.default.put"))
 		})
 	})
 })
