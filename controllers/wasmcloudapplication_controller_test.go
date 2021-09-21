@@ -104,12 +104,27 @@ var _ = Describe("Test Create Application", func() {
 
 			Expect(len(app.Spec.Components)).Should(Equal(1))
 			Expect(app.Status.FromLatticeController).Should(Equal("received"))
-			fakecontroller.Close()
 
 			// Check that we actually the lattice controller about our app.
 			msg := fakecontroller.SpyNextMessage()
 			Expect(msg).ShouldNot(BeNil())
 			Expect(msg.Subject).Should(Equal("wasmbus.alc.default.put"))
+
+			fakecontroller.Close()
+		})
+
+		It("Should delete the application", func() {
+			fakecontroller := fakelatticecontroller.SetupSubscriber()
+
+			ctx := context.Background()
+			Expect(k8sClient.Delete(ctx, application)).Should(Succeed())
+
+			msg := fakecontroller.WaitForMessage()
+
+			Expect(msg).ShouldNot(BeNil())
+			Expect(msg.Subject).Should(Equal("wasmbus.alc.default.del"))
+
+			fakecontroller.Close()
 		})
 	})
 })
