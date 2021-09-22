@@ -24,13 +24,17 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/nats-io/nats-server/v2/server"
+
 	corev1beta1 "github.com/wasmCloud/wasmcloud-k8s-operator/api/v1beta1"
+	fakelatticecontroller "github.com/wasmCloud/wasmcloud-k8s-operator/fake_lattice_controller"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -40,6 +44,7 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var natsServer *server.Server
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -67,7 +72,31 @@ var _ = BeforeSuite(func() {
 
 	//+kubebuilder:scaffold:scheme
 
-	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
+	Expect(corev1beta1.AddToScheme(scheme.Scheme)).NotTo(HaveOccurred())
+
+	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: scheme.Scheme,
+	})
+	Expect(err).ToNot(HaveOccurred())
+
+	k8sClient = k8sManager.GetClient()
+	Expect(k8sClient).ToNot(BeNil())
+
+	err = (&WasmCloudApplicationReconciler{
+		Client:   k8sClient,
+		Scheme:   k8sManager.GetScheme(),
+		Log:      ctrl.Log.WithName("WasmCloudControllerTest"),
+		Recorder: k8sManager.GetEventRecorderFor("WasmCloudController"),
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	go func() {
+		err = k8sManager.Start(ctrl.SetupSignalHandler())
+		Expect(err).ToNot(HaveOccurred())
+	}()
+
+	natsServer = fakelatticecontroller.Setup()
+
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 
@@ -76,5 +105,6 @@ var _ = BeforeSuite(func() {
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
 	err := testEnv.Stop()
+	natsServer.Shutdown()
 	Expect(err).NotTo(HaveOccurred())
 })

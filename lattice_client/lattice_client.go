@@ -1,4 +1,4 @@
-package request
+package latticeclient
 
 import (
 	"encoding/json"
@@ -20,21 +20,31 @@ type response struct {
 	Status string `json:"status"`
 }
 
-type Sender struct {
+type Client struct {
 	Log logr.Logger
 }
 
-func (s *Sender) Send(m Message) (response, error) {
-	log := s.Log.WithValues("requesting wasmcloud-lattice-controller to reconcile", m)
+func (c *Client) Put(app *corev1beta1.WasmCloudApplication) (response, error) {
+	r, e := c.send("put", app)
+	return r, e
+}
+func (c *Client) Delete(app *corev1beta1.WasmCloudApplication) (response, error) {
+	r, e := c.send("del", app)
+	return r, e
+}
 
-	data, err := json.Marshal(m)
+func (c *Client) send(verb string, app *corev1beta1.WasmCloudApplication) (response, error) {
+	log := c.Log.WithValues("requesting wasmcloud-lattice-controller to reconcile", app)
+
+	data, err := json.Marshal(app)
 	if err != nil {
 		log.Info("error parsing the template", "error", err)
 		return response{}, err
 	}
 	nc, _ := nats.Connect(nats.DefaultURL)
 	// TODO: replace default with lattice namespace prefix
-	msg, err := nc.Request("wasmbus.alc.default", []byte(data), 1*time.Second)
+	topic := "wasmbus.alc.default." + verb
+	msg, err := nc.Request(topic, []byte(data), 1*time.Second)
 
 	if err != nil {
 		log.Info("unable to connect to the lattice controller", "error", err)
@@ -47,6 +57,8 @@ func (s *Sender) Send(m Message) (response, error) {
 		log.Info("invalid json from lattice controller", "error", err)
 		return response, err
 	}
+
+	log.Info("response from the lattice controller", "application", response.Status)
 
 	return response, nil
 }
