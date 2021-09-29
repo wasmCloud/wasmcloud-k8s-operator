@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -108,6 +109,7 @@ func (r *WasmCloudApplicationReconciler) createExternalResources(app *corev1beta
 	response, err := sender.Put(app)
 
 	app.Status.FromLatticeController = response.Status
+	app.Status.TimeApplied = app.CreationTimestamp.Time.Format(time.RFC3339)
 
 	return err
 }
