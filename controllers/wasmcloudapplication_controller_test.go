@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/oam-dev/kubevela/apis/core.oam.dev/common"
@@ -104,6 +105,10 @@ var _ = Describe("Test Create Application", func() {
 
 			Expect(len(app.Spec.Components)).Should(Equal(1))
 			Expect(app.Status.FromLatticeController).Should(Equal("received"))
+			fmt.Println(app.Status.TimeApplied)
+			appliedTime, err := time.Parse(time.RFC3339, app.Status.TimeApplied)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(appliedTime.Before(time.Now())).Should(BeTrue())
 
 			// Check that we actually the lattice controller about our app.
 			msg := fakecontroller.SpyNextMessage()

@@ -29,6 +29,8 @@ type WasmCloudApplicationStatus struct {
 
 	// Status from wasmCloud lattice controller when requesting the change or updating
 	FromLatticeController string `json:"fromLatticeController"`
+	// The time at which the request was made to the lattice controller
+	TimeApplied string `json:"TimeApplied"`
 }
 
 //+kubebuilder:object:root=true
